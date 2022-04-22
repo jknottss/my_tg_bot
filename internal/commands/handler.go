@@ -16,22 +16,26 @@ func Handler(app *start.App) {
 	for update := range updates {
 		if update.Message != nil { // If we got a message
 			app.Update = update
-			input := strings.Split(update.Message.Text, " ")
-			command := strings.ToLower(input[0])
-			//строку отправлять в базу
-			str := strings.Join(input[1:], " ")
-			fmt.Println(str)
-			switch {
-			case command == "добавь":
-				addTask(app)
-			case command == "список":
-				showAllTasks(app)
-			case command == "сделал":
-				taskDone(app)
-			default:
-				log.Printf("[%s] %s", update.Message.From.UserName, update.Message.Text)
-				app.Bot.Send(tgbotapi.NewMessage(update.Message.Chat.ID, "Неверная команда"))
-			}
+			doCommand(app)
 		}
+	}
+}
+
+func doCommand(app *start.App) {
+	input := strings.Split(app.Update.Message.Text, " ")
+	command := strings.ToLower(input[0])
+	//строку отправлять в базу
+	str := strings.Join(input[1:], " ")
+	fmt.Println(str)
+	switch {
+	case command == "добавь":
+		addTask(app)
+	case command == "список":
+		showAllTasks(app)
+	case command == "сделал":
+		taskDone(app)
+	default:
+		log.Printf("[%s] %s", app.Update.Message.From.UserName, app.Update.Message.Text)
+		app.Bot.Send(tgbotapi.NewMessage(app.Update.Message.Chat.ID, "Неверная команда"))
 	}
 }
