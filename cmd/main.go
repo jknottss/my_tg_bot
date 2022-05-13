@@ -2,11 +2,11 @@ package main
 
 import (
 	"bot/internal/commands"
-	"bot/internal/start"
+	"bot/internal/getconfig"
 )
 
 //TODO написать unit - тесты
 func main() {
-	app := start.Start()
+	app := getconfig.Start()
 	commands.Handler(app)
 }
