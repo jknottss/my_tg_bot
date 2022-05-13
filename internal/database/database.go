@@ -1,43 +1,17 @@
-package getconfig
+package database
 
 import (
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/jackc/pgx"
 	"github.com/joho/godotenv"
-	"log"
 	"os"
 	"strconv"
 )
 
-type App struct {
-	Bot    *tgbotapi.BotAPI
-	Update tgbotapi.Update
+type Connection struct {
+	Pool *pgx.ConnPool
 }
 
-func Start() *App {
-	app := &App{}
-	bot, err := tgbotapi.NewBotAPI(getToken())
-	if err != nil {
-		log.Panic(err)
-	}
-	app.Bot = bot
-	bot.Debug = false
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Authorized on account %s", bot.Self.UserName)
-	return app
-}
-
-func getToken() string {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return os.Getenv("TOKEN")
-}
-
-func GetConfig() (*pgx.ConnPoolConfig, error) {
+func getConfig() (*pgx.ConnPoolConfig, error) {
 	err := godotenv.Load()
 	if err != nil {
 		return nil, err
@@ -57,4 +31,28 @@ func GetConfig() (*pgx.ConnPoolConfig, error) {
 			User:     PsqlUser,
 		}}
 	return &conf, nil
+}
+
+func Connect() (*Connection, error) {
+	config, err := getConfig()
+	if err != nil {
+		return nil, err
+	}
+	if pool, err := pgx.NewConnPool(*config); err == nil {
+		return &Connection{pool}, nil
+	} else {
+		return nil, err
+	}
+}
+
+func (c *Connection) AddTask(userId int) error {
+
+}
+
+func (c *Connection) DropTask(userId int) error {
+
+}
+
+func (c *Connection) ShowAllTasks(userId int) error {
+
 }

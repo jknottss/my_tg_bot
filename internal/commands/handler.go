@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"bot/internal/getconfig"
+	"bot/internal/startapp"
 	"fmt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"log"
@@ -12,11 +12,10 @@ const add = "добавь"
 const list = "список"
 const done = "сделал"
 
-func Handler(app *getconfig.App) {
+func Handler(app *startapp.App) {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := app.Bot.GetUpdatesChan(u)
-
 	for update := range updates {
 		if update.Message != nil { // If we got a message
 			app.Update = update
@@ -25,7 +24,7 @@ func Handler(app *getconfig.App) {
 	}
 }
 
-func doCommand(app *getconfig.App) {
+func doCommand(app *startapp.App) {
 	input := strings.Split(app.Update.Message.Text, " ")
 	command := strings.ToLower(input[0])
 	if command == add || command == done {
