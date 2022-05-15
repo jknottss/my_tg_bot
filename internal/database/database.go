@@ -16,19 +16,15 @@ func getConfig() (*pgx.ConnPoolConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	PsqlHost := os.Getenv("PSQL_HOST")
 	PsqlPort := os.Getenv("PSQL_PORT")
-	PsqlUser := os.Getenv("PSQL_USER")
-	PsqlPassword := os.Getenv("PSQL_PASSWORD")
-	PsqlDb := os.Getenv("PSQL_DB")
 	Port, _ := strconv.ParseUint(PsqlPort, 10, 64)
 	conf := pgx.ConnPoolConfig{
 		ConnConfig: pgx.ConnConfig{
-			Host:     PsqlHost,
+			Host:     os.Getenv("PSQL_HOST"),
 			Port:     uint16(Port),
-			Password: PsqlPassword,
-			Database: PsqlDb,
-			User:     PsqlUser,
+			Password: os.Getenv("PSQL_PASSWORD"),
+			Database: os.Getenv("PSQL_DB"),
+			User:     os.Getenv("PSQL_USER"),
 		}}
 	return &conf, nil
 }
@@ -43,16 +39,4 @@ func Connect() (*Connection, error) {
 	} else {
 		return nil, err
 	}
-}
-
-func (c *Connection) AddTask(userId int) error {
-
-}
-
-func (c *Connection) DropTask(userId int) error {
-
-}
-
-func (c *Connection) ShowAllTasks(userId int) error {
-
 }
