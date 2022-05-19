@@ -7,6 +7,22 @@ import (
 	"strconv"
 )
 
+const create = `
+		CREATE TABLE IF NOT EXISTS users
+		(
+		id SERIAL PRIMARY KEY,
+		user_id INT
+		);
+		CREATE TABLE IF NOT EXISTS tasks
+		(
+		id SERIAL PRIMARY KEY,
+		userID INT REFERENCES users (id),
+		task TEXT,
+		priority INT,
+		done BOOL
+		);
+		`
+
 type Connection struct {
 	Pool *pgx.ConnPool
 }
@@ -16,15 +32,15 @@ func getConfig() (*pgx.ConnPoolConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	PsqlPort := os.Getenv("PSQL_PORT")
+	PsqlPort := os.Getenv("POSTGRES_PORT")
 	Port, _ := strconv.ParseUint(PsqlPort, 10, 64)
 	conf := pgx.ConnPoolConfig{
 		ConnConfig: pgx.ConnConfig{
-			Host:     os.Getenv("PSQL_HOST"),
+			Host:     os.Getenv("POSTGRES_HOST"),
 			Port:     uint16(Port),
-			Password: os.Getenv("PSQL_PASSWORD"),
-			Database: os.Getenv("PSQL_DB"),
-			User:     os.Getenv("PSQL_USER"),
+			Password: os.Getenv("POSTGRES_PASSWORD"),
+			Database: os.Getenv("POSTGRES_DB"),
+			User:     os.Getenv("POSTGRES_USER"),
 		}}
 	return &conf, nil
 }
@@ -35,6 +51,10 @@ func Connect() (*Connection, error) {
 		return nil, err
 	}
 	if pool, err := pgx.NewConnPool(*config); err == nil {
+		_, err = pool.Exec(create)
+		if err != nil {
+			return nil, err
+		}
 		return &Connection{pool}, nil
 	} else {
 		return nil, err

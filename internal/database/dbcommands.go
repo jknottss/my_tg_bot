@@ -3,8 +3,8 @@ package database
 const (
 	addTask = `
 		INSERT INTO tasks
-		(user_id, task_nbr, task)
-		VALUES ($1, $2, $3)
+		(user_id, task)
+		VALUES ($1, $2)
 	`
 	dropTask = `
 		DELETE FROM tasks
@@ -18,13 +18,13 @@ const (
 	`
 )
 
-func (c *Connection) AddTask(userId, taskNbr int, task string) error {
+func (c *Connection) AddTask(userId, task string) error {
 	conn, err := c.Pool.Acquire()
 	if err != nil {
 		return err
 	}
 	defer c.Pool.Release(conn)
-	if _, err := conn.Exec(addTask, userId, taskNbr, task); err != nil {
+	if _, err := conn.Exec(addTask, userId, task); err != nil {
 		return err
 	}
 	return nil
@@ -48,9 +48,9 @@ func (c *Connection) ShowAllTasks(userId int) (string, error) {
 		return "", err
 	}
 	defer c.Pool.Release(conn)
-	var task string
-	if err := conn.QueryRow(showAll, userId).Scan(&task); err != nil {
+	var tasks string
+	if err := conn.QueryRow(showAll, userId).Scan(&tasks); err != nil {
 		return "", err
 	}
-	return task, nil
+	return tasks, nil
 }
