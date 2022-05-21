@@ -8,20 +8,13 @@ import (
 )
 
 const create = `
-		CREATE TABLE IF NOT EXISTS users
-		(
+		CREATE TABLE IF NOT EXISTS tasks (
 		id SERIAL PRIMARY KEY,
-		user_id INT
-		);
-		CREATE TABLE IF NOT EXISTS tasks
-		(
-		id SERIAL PRIMARY KEY,
-		userID INT REFERENCES users (id),
+		user_id TEXT,
 		task TEXT,
 		priority INT,
 		done BOOL
-		);
-		`
+		); `
 
 type Connection struct {
 	Pool *pgx.ConnPool
