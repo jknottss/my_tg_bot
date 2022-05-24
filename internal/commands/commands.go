@@ -10,20 +10,33 @@ import (
 )
 
 func addTask(app *startapp.App, task string) {
-	app.Conn.AddTask(app.Update.Message.From.UserName, task)
-	app.Bot.Send(tgbotapi.NewMessage(app.Update.Message.Chat.ID, "Задача добавлена!"))
+	count, err := app.Conn.AddTask(app.Update.Message.From.UserName, task)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	app.Bot.Send(tgbotapi.NewMessage(app.Update.Message.Chat.ID, "Задача добавлена! Ее номер: "+strconv.Itoa(count)))
 }
 
-//todo отдельно выполненные, отдельно невыполненные
 func showAllTasks(app *startapp.App) {
 	var modArr []database.Model
 	modArr, err := app.Conn.GetAllTasks(app.Update.Message.From.UserName)
-	res, _ := database.BuildAllTasks(modArr)
+	res := BuildTasks(modArr)
 	fmt.Println(res)
 	if err != nil {
 		log.Println(err)
+		return
 	}
-	app.Bot.Send(tgbotapi.NewMessage(app.Update.Message.Chat.ID, "тут будут задачи"))
+	msg := &tgbotapi.MessageConfig{
+		BaseChat: tgbotapi.BaseChat{
+			ChatID: app.Update.Message.Chat.ID,
+		},
+		Text:                  res,
+		ParseMode:             "html",
+		Entities:              nil,
+		DisableWebPagePreview: false,
+	}
+	app.Bot.Send(msg)
 }
 
 func doneTask(app *startapp.App, task string) {
@@ -38,4 +51,18 @@ func doneTask(app *startapp.App, task string) {
 		return
 	}
 	app.Bot.Send(tgbotapi.NewMessage(app.Update.Message.Chat.ID, "Задача выполнена!"))
+}
+
+func BuildTasks(tasks []database.Model) (res string) {
+	done := "<ins>Выполненные:</ins>\n"
+	actual := "<ins>Актуальные:</ins>\n"
+	for _, val := range tasks {
+		if val.Done {
+			done += fmt.Sprintf("<i>%d. %s</i> \u2705\n", val.Priority, val.Task)
+		} else {
+			actual += fmt.Sprintf("<i>%d. %s</i>\n", val.Priority, val.Task)
+		}
+		res = done + "\n" + actual
+	}
+	return
 }

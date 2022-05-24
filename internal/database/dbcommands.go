@@ -1,13 +1,19 @@
 package database
 
 const (
+	taskCount = `
+		SELECT COUNT (*)
+		FROM tasks 
+		WHERE user_id=$1
+	`
+
 	addTask = `
 		INSERT INTO tasks (
 		user_id,
 		task,
 		priority,
 		done )
-		VALUES ($1, $2, (SELECT COUNT (*) FROM tasks WHERE user_id=$1) + 1, $3)
+		VALUES ($1, $2, $3 + 1, $4)
 	`
 	doneTask = `
 		UPDATE tasks
@@ -17,7 +23,8 @@ const (
 	`
 	getAll = `
 		SELECT priority,
-		task
+		task,
+		done
 		FROM tasks
 		WHERE user_id= $1
 	`
@@ -26,18 +33,21 @@ const (
 type Model struct {
 	Priority int    `db:"priority"`
 	Task     string `db:"task"`
+	Done     bool   `db:"done"`
 }
 
-func (c *Connection) AddTask(userId string, task string) error {
+func (c *Connection) AddTask(userId string, task string) (int, error) {
 	conn, err := c.Pool.Acquire()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer c.Pool.Release(conn)
-	if _, err := conn.Exec(addTask, userId, task, false); err != nil {
-		return err
+	var count int
+	err = conn.QueryRow(taskCount, userId).Scan(&count)
+	if _, err := conn.Exec(addTask, userId, task, count, false); err != nil {
+		return 0, err
 	}
-	return nil
+	return count + 1, nil
 }
 
 func (c *Connection) DoneTask(userId string, taskNbr int) error {
@@ -66,7 +76,7 @@ func (c *Connection) GetAllTasks(userId string) ([]Model, error) {
 		return nil, err
 	}
 	for query.Next() {
-		err := query.Scan(&modArr[i].Priority, &modArr[i].Task)
+		err := query.Scan(&modArr[i].Priority, &modArr[i].Task, &modArr[i].Done)
 		i++
 		if err != nil {
 			return nil, err
